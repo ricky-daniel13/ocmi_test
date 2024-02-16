@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  uid   String @id @default(uuid())
+  mail String @unique
+  password String
+  access Int @default(0)
+  customer Customer?
+}
+
+model Customer {
+  id   Int @id @default(autoincrement())
+  bussName String @unique
+  user   User @relation(fields: [userUid], references: [uid])
+  userUid String  @unique //Unique ID of customer's user credentials
+  employees Employee[]
+  payrolls Payroll[]
+}
+
+model Employee {
+  id   Int @id @default(autoincrement())
+  emplyName String
+  isSalary Boolean
+  payRate Decimal
+  employer   Customer @relation(fields: [emplyrId], references: [id]) //ID of customer
+  emplyrId Int 
+  rows PayRow[]
+}
+
+model Payroll {
+  id   Int @id @default(autoincrement())
+  checkDate DateTime
+  status String //Flag with unpayed (u) and payed (p) as possible values
+  notes String
+  customer   Customer @relation(fields: [customerId], references: [id]) //ID of customer
+  customerId Int 
+  rows PayRow[]
+}
+
+model PayRow {
+  periodStart DateTime
+  periodEnd DateTime
+  units Int
+  currIsSalary Boolean
+  currRate Decimal
+  payroll   Payroll @relation(fields: [payrollId], references: [id]) //ID of customer
+  payrollId Int 
+  employee   Employee @relation(fields: [employeeId], references: [id]) //ID of employee
+  employeeId Int 
+  @@id([payrollId, employeeId])
+}
